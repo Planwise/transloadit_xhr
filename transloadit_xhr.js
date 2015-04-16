@@ -13,6 +13,23 @@
         this.processCb = opts.processCb || null;    // Callback: File uploaded, still processing the file
 
         this.XMLHTTPRequestUpload = null;
+        
+    	var self = this;
+    	var _normalizeJsonParameter = function (key) {
+            if (typeof self[key] === "object") {
+                self[key] = JSON.stringify(self[key]);
+            } else if (typeof self[key] === "string") {
+                try {
+                    JSON.parse(self[key]);
+                } catch (e) {
+                    if (typeof self.errorCb === "function") {
+                        self.errorCb("The \"" + key + "\" parameter is not a valid JSON string");
+                    }
+                }
+            }
+    	};
+    	_normalizeJsonParameter("params");
+    	_normalizeJsonParameter("signature");
     }
 
     TransloaditXhr.prototype.checkAssemblyStatus = function(assemblyUrl) {
@@ -64,7 +81,9 @@
 
         var formPost = new FormData();
         formPost.append("params", this.params);
-        formPost.append("signature", this.signature);
+        if (this.signature) {
+            formPost.append("signature", this.signature);
+        }
         if (typeof fieldsArr !== "undefined") {
 	        for (i=0; i < fieldsArr.length; i++) {
 	  			formPost.append(fieldsArr[i].name, fieldsArr[i].value);
